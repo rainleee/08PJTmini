@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<!DOCTYPE mapper
+		PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+		"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="ProductMapper">
+ 	
+	<!-- product table -->
+	<resultMap id="productSelectMap" type="product">
+		<result property="prodNo" 			column="prod_no" 			jdbcType="INTEGER"/>
+		<result property="prodName" 			column="prod_name" 			jdbcType="INTEGER"/>
+		<result property="prodDetail"	column="prod_detail" 		jdbcType="VARCHAR" />
+		<result property="manuDate" 	column="manufacture_day" 		jdbcType="VARCHAR" />
+		<result property="price" 				column="price" 					jdbcType="INTEGER" />
+		<result property="fileName" 				column="image_file" 					jdbcType="VARCHAR" />
+		<result property="regDate" 			column="reg_date" 		jdbcType="DATE" />
+		<result	property="proTranCode"		column="tsc"	jdbcType="VARCHAR"	/>
+	</resultMap>
+	
+	
+	
+	 
+	 <!-- Product -->
+	 <!-- SQL : INSERT -->
+	 <insert 	id="addProduct"		parameterType="product" >
+	 	INSERT
+		INTO product( prod_no , prod_name , prod_detail , manufacture_day ,  price ,  image_file , reg_date) 
+		VALUES	 (	seq_product_prod_no.NEXTVAL , #{prodName:VARCHAR} , #{prodDetail:VARCHAR} , TO_CHAR(TO_DATE( #{manuDate:VARCHAR}, 'YYYY-MM-DD'), 'YYYYMMDD') , #{price:INTEGER} , 
+							#{fileName:VARCHAR} ,SYSDATE )
+	 </insert>
+	 
+	 <!-- SQL : SELECT ONE -->
+	 <select 	id="getProduct"	parameterType="int"	resultMap="productSelectMap">
+		SELECT
+		prod_no , prod_name , prod_detail , manufacture_day ,  price ,  image_file , reg_date 		
+		FROM product 
+		WHERE prod_no = #{value}
+	 </select>
+	 
+	 <!-- SQL : SELECT LIST -->
+	 <select  id="getProductList"  parameterType="search"	resultMap="productSelectMap">
+	  	SELECT *
+	  	FROM (	SELECT inner_table.* , ROWNUM AS row_seq
+	  					FROM		(	SELECT 
+										p.prod_no, 
+										p.prod_name, 
+										p.price, 
+										p.reg_date, 
+										NVL(t.tran_status_code, 'sale') tsc
+										FROM product p, transaction t 
+										<where> 
+											p.prod_no = t.prod_no(+)
+											<if test="searchCondition != null ">
+													<if test="searchCondition == 0 and searchKeyword !='' ">
+										 				AND p.prod_No LIKE '%'||#{searchKeyword}||'%'
+													</if>
+													<if test="searchCondition == 1 and searchKeyword !='' ">
+										 				AND UPPER(p.prod_name) LIKE UPPER('%'||#{searchKeyword}||'%')
+													</if>
+													<if test="searchCondition == 2 and searchKeyword !='' ">
+										 				AND p.price LIKE '%'||#{searchKeyword}||'%'
+													</if>
+											</if>
+										</where>
+											ORDER BY p.prod_no) inner_table
+						WHERE ROWNUM &lt;=#{currentPage}*#{pageSize} )
+						WHERE row_seq BETWEEN ( ( #{currentPage} - 1) * #{pageSize} + 1) AND #{currentPage} * #{pageSize}
+	 </select>
+	 
+	 
+	 <!-- SQL : UPDATE -->
+	 <update	id="updateProduct"	parameterType="product" >
+	   	UPDATE product
+	   	<set>
+	   		prod_name 	= #{prodName} ,
+			prod_detail	= #{prodDetail},
+			manufacture_day 	= #{manuDate} ,
+			image_file				=	#{fileName}
+	   	</set>
+	   	WHERE prod_no = #{prodNo}
+	 </update>
+	 
+	 <!-- SQL : SELECT ROW Count -->	 
+	 <select  id="getTotalCountProduct"  parameterType="search"	 resultType="int">
+	  	SELECT COUNT(*)
+	  	FROM(	SELECT 
+										p.prod_no, 
+										p.prod_name, 
+										p.price, 
+										p.reg_date, 
+										NVL(t.tran_status_code, 'sale') tsc
+										FROM product p, transaction t 
+										<where> 
+											p.prod_no = t.prod_no(+)
+											<if test="searchCondition != null ">
+													<if test="searchCondition == 0 and searchKeyword !='' ">
+										 				AND p.prod_No LIKE '%'||#{searchKeyword}||'%'
+													</if>
+													<if test="searchCondition == 1 and searchKeyword !='' ">
+										 				AND UPPER(p.prod_name) LIKE UPPER('%'||#{searchKeyword}||'%')
+													</if>
+													<if test="searchCondition == 2 and searchKeyword !='' ">
+										 				AND p.price LIKE '%'||#{searchKeyword}||'%'
+													</if>
+											</if>
+										</where>
+											ORDER BY p.prod_no) countTable						
+	 </select>
+	 
+</mapper>

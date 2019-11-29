@@ -39,10 +39,10 @@
 	 <update	id="updateUser"	parameterType="user" >
 	   	UPDATE users
 	   	<set>
-	   		user_name 	= #{userName:VARCHAR} ,
-			cell_phone	= #{phone:VARCHAR},
-			addr 				= #{addr:VARCHAR} ,
-			email				=	#{email:VARCHAR}
+	   		user_name 	= #{userName} ,
+			cell_phone	= #{phone},
+			addr 				= #{addr} ,
+			email				=	#{email}
 	   	</set>
 	   	WHERE user_id = #{userId}
 	 </update>
